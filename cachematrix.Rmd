@@ -1,0 +1,93 @@
+---
+title: "Programming Assignment 2"
+subtitle: "R Programming - Data Science Specialization "
+author: "Juan José E. López"
+date: "11 de noviembre de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Alcance de Léxico
+
+Una de las características importantes que diferencia a R de su antecesor de base Fortran es el alcance de léxico o lexical scoping, que contrario al alcance dinámico es muy eficiente al realizar cálculos estadísticos. Esto se evidencia al relacionar una variable libre de una función.
+
+### ¿Qué valor debe asumir una variable libre?
+
+El lexical scoping dice que los valores de una variable libre se deben buscar en el entorno en que la función fue definida, esto es, buscar en el entorno padre, luego en el padre del padre y hasta el entorno de nivel superior o "entorno global" (y finalmente un precioso mensaje de error).
+
+Otros lenguajes que trabajan con lexical scoping son: scheme, perl, python, Lisp, etc.
+> Todos los lenguajes de programación convergen a Lisp
+
+## Alcance de Léxico en R, Aplicado a Manejo de Caché
+
+Se aplicarán las bondades del exical scoping para almacenar en caché la inversa de una matriz, pues es una operación que consume muchos recursos del ordenador, por lo cual se comenzará creando una función que cree un objeto matriz que almacene como caché su inversa:
+
+```{r cars}
+#La siguiente función almacenará la inversa de una matriz
+makeCacheMatrix <- function(x = matrix()) {
+    
+    # Primero se crea la variable caché vacía
+    inversa <- NULL
+    
+    #En el siguiente código se establece el valor de la matriz
+    set <- function(y){
+        #El operador <<- permite a "set" instanciar x fuera del entorno de la función
+        x <<- y
+        inversa <<- NULL
+    }
+    
+    #Obtener el valor de la matriz
+    get <- function() x #retorna x
+    
+    #Obtener el valor de la inversa y almacenarla en "inversa"
+    setinversa <- function(inv) inversa <<- inv
+    
+    #Recuperar el valor de la inversa
+    getinversa <- function() inversa 
+    
+    #Enlistar las funciones para poder llamarlas luego
+    list(set = set, get = get,
+         setinversa = setinversa,
+         getinversa = getinversa)
+}
+
+#La siguiente función obtendrá la inversa en caché
+cacheInversa <- function(x, ...){
+    
+    #Obtener el valor retornado de la inversa
+    inversa <- x$getinversa()
+    
+    #Condición de error
+    #Si el valor del caché NO es nulo, obtener caché...
+    if(!is.null(inversa)){
+        message("Obteniendo Data en Cache")
+        return(inversa)
+    }
+    #...Si ES nulo, entonces obtener la inversa (con solve()) y almacenarla en caché
+    valor <- x$get()
+    inversa <- solve(valor,...)
+    x$setinversa(inversa)
+    inversa #retornar la inversa
+}
+```
+
+Ahora aplicamos la función para ver como funciona sobre una matriz x de 2 filas y 5 columnas:
+
+```{r cars}
+x <-matrix(c(4,3,-2,-1), nrow=2, ncol=2)
+print(x)
+```
+
+Aplicando la función cacheInversa sobre la matriz x se obtiene el siguiente resultado:
+
+```{r cars}
+cachetest <- makeCacheMatrix(x)
+cachetest$get()
+cacheInversa(cachetest)
+cacheInversa(cachetest)
+
+```
+
